@@ -1,19 +1,26 @@
 <?php
 
+use App\Http\Controllers\AuthenticationController;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UsersController;
-use App\Http\Controllers\ContactsController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ContactController;
 
-Route::get('/users', [UsersController::class, 'index']);
-Route::get('/users/{id}', [UsersController::class, 'findById']);
+Route::middleware(['auth:sanctum'])->group(function(){
+    Route::get('/contacts', [ContactController::class, 'index']);
+    Route::post('/contacts', [ContactController::class, 'create']);
 
-Route::get('/contacts', [ContactsController::class, 'index'])->middleware(['auth:sanctum']);
-Route::post('/contacts', [ContactsController::class, 'createContact']);
-Route::get('/contacts/{id}', [ContactsController::class, 'findById']);
-Route::delete('/contacts/{id}', [ContactsController::class, 'deleteContact']);
+    // Route::get('/contacts', [ContactController::class, 'findBy'])->middleware('owner.contact');
+    Route::get('/contacts/{id}', [ContactController::class, 'findById'])->middleware('owner.contact');
+    Route::put('/contacts/{id}', [ContactController::class, 'update'])->middleware('owner.contact');
+    Route::delete('/contacts/{id}', [ContactController::class, 'delete'])->middleware('owner.contact');
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/logout', [AuthController::class, 'logout'])->middleware(['auth:sanctum']);
-Route::get('/me', [AuthController::class, 'me'])->middleware(['auth:sanctum']);
+    Route::get('/logout', [AuthenticationController::class, 'logout']);
+    Route::get('/me', [AuthenticationController::class, 'me']);
+});
+
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/users/{id}', [UserController::class, 'findById']);
+
+Route::post('/register', [AuthenticationController::class, 'register']);
+Route::post('/login', [AuthenticationController::class, 'login']);

@@ -2,15 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Users;
-use App\Models\Contacts;
+use App\Http\Resources\UserDetailResource;
+use App\Models\User;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-class AuthController extends Controller
+class AuthenticationController extends Controller
 {
+    public function register(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $request['password'] = Hash::make($request->password);
+        $user = User::create($request->all());
+        return new UserDetailResource($user);
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -18,7 +31,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = Users::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -26,7 +39,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return $user->createToken('user login')->plainTextToken;
+        return $user->createToken("user_".$user->id)->plainTextToken;
     }
 
     public function logout(Request $request)
@@ -37,9 +50,6 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = Auth::user();
-        $contacts = Contacts::where('user_id', $user->id)->get();
-        $user->contacts = response()->json($contacts);
         return response()->json($user);
-        
     }
 }
